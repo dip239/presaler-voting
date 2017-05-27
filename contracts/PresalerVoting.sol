@@ -81,7 +81,7 @@ contract PresalerVoting {
         var rawVote = rawVotes[voter];
         if (rawVote<=MAX_AMOUNT_EQU_0_PERCENT) return 0;
         else if (rawVote>=MIN_AMOUNT_EQU_100_PERCENT) return 100;
-        else return rawVotes[voter] * 10 / 1 finney;
+        else return rawVote * 100 / 1 ether;
     }
 
     function votingEndsInHours() constant returns (uint endsInHrs) {
