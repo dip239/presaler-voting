@@ -39,12 +39,12 @@ contract PresalerVoting {
 
     /* ====== configuration START ====== */
 
-    uint public VOTING_START_BLOCKNR  = 1**128-1;
+    uint public VOTING_START_BLOCKNR  = 0;
     uint public VOTING_END_TIME       = 0;
 
     /* ====== configuration END ====== */
 
-    TokenStorage constant PRESALE_CONTRACT = TokenStorage(0x4FD997ED7C10DBD04E95D3730CD77D79513076F2);
+    TokenStorage PRESALE_CONTRACT = TokenStorage(0x4Fd997Ed7c10DbD04e95d3730cd77D79513076F2);
 
     string[5] private stateNames = ["BEFORE_START",  "VOTING_RUNNING", "CLOSED" ];
     enum State { BEFORE_START,  VOTING_RUNNING, CLOSED }
@@ -57,7 +57,7 @@ contract PresalerVoting {
     address owner;
 
     //constructor
-    function Presale () {
+    function PresalerVoting () {
         owner = msg.sender;
     }
 
@@ -66,7 +66,7 @@ contract PresalerVoting {
     onlyPresaler
     onlyState(State.VOTING_RUNNING)
     payable {
-        if (!msg.sender.send(msg.value)) throw;
+        if (msg.value > 1 ether || !msg.sender.send(msg.value)) throw;
         rawVotes[msg.sender] = msg.value;
     }
 
@@ -77,19 +77,19 @@ contract PresalerVoting {
 
     function setOwner(address newOwner) onlyOwner {owner = newOwner;}
 
-    function votedPerCent() constant external returns (uint) {
-        var rawVote = rawVotes[msg.sender];
+    function votedPerCent(address voter) constant external returns (uint) {
+        var rawVote = rawVotes[voter];
         if (rawVote<=MAX_AMOUNT_EQU_0_PERCENT) return 0;
         else if (rawVote>=MIN_AMOUNT_EQU_100_PERCENT) return 100;
-        else return rawVotes[msg.sender] * 10 / 1 finney;
+        else return rawVotes[voter] * 10 / 1 finney;
     }
 
     function votingEndsInHours() constant returns (uint endsInHrs) {
-        return (VOTING_END_TIME - now) / 1 hours;
+        return VOTING_END_TIME==0 ? 0 : (VOTING_END_TIME - now) / 1 hours;
     }
 
     function currentState() internal constant returns (State) {
-        if (block.number < VOTING_START_BLOCKNR) {
+        if (VOTING_START_BLOCKNR == 0 || block.number < VOTING_START_BLOCKNR) {
             return State.BEFORE_START;
         } else if (now <= VOTING_END_TIME) {
             return State.VOTING_RUNNING;
