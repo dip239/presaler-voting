@@ -35,7 +35,7 @@ interface TokenStorage {
 
 contract PresalerVoting {
 
-    string public constant VERSION = "0.0.3";
+    string public constant VERSION = "0.0.4";
 
     /* ====== configuration START ====== */
 
@@ -46,17 +46,17 @@ contract PresalerVoting {
 
     TokenStorage PRESALE_CONTRACT = TokenStorage(0x4Fd997Ed7c10DbD04e95d3730cd77D79513076F2);
 
-    string[5] private stateNames = ["BEFORE_START",  "VOTING_RUNNING", "CLOSED" ];
+    string[3] private stateNames = ["BEFORE_START",  "VOTING_RUNNING", "CLOSED" ];
     enum State { BEFORE_START,  VOTING_RUNNING, CLOSED }
 
     mapping (address => uint) public rawVotes;
 
-    uint private constant MAX_AMOUNT_EQU_0_PERCENT   = 1 finney;
+    uint private constant MAX_AMOUNT_EQU_0_PERCENT   = 10 finney;
     uint private constant MIN_AMOUNT_EQU_100_PERCENT = 1 ether ;
 
-    address owner;
+    address public owner;
 
-    //constructor
+    //constructors
     function PresalerVoting () {
         owner = msg.sender;
     }
@@ -92,9 +92,9 @@ contract PresalerVoting {
     }
 
     /// @notice return voting remaining time (hours, minutes).
-    function votingEndsInHHMM() constant returns (uint16, uint16) {
+    function votingEndsInHHMM() constant returns (uint8, uint8) {
         var tsec = VOTING_END_TIME - now;
-        return VOTING_END_TIME==0 ? (0,0) : (uint16(tsec / 1 hours), uint16(tsec % 1 hours / 1 minutes));
+        return VOTING_END_TIME==0 ? (0,0) : (uint8(tsec / 1 hours), uint8(tsec % 1 hours / 1 minutes));
     }
 
     function currentState() internal constant returns (State) {
