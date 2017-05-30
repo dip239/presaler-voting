@@ -35,7 +35,7 @@ interface TokenStorage {
 
 contract PresalerVoting {
 
-    string public constant VERSION = "0.0.2";
+    string public constant VERSION = "0.0.3";
 
     /* ====== configuration START ====== */
 
@@ -67,7 +67,8 @@ contract PresalerVoting {
     onlyState(State.VOTING_RUNNING)
     payable {
         if (msg.value > 1 ether || !msg.sender.send(msg.value)) throw;
-        rawVotes[msg.sender] = msg.value;
+        //special treatment for 0-ether payments
+        rawVotes[msg.sender] = msg.value > 0 ? msg.value : 1 wei;
     }
 
     /// @notice start voting at `startBlockNr` for `durationHrs`.
