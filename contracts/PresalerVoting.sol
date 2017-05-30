@@ -35,7 +35,7 @@ interface TokenStorage {
 
 contract PresalerVoting {
 
-    string public constant VERSION = "0.0.1";
+    string public constant VERSION = "0.0.2";
 
     /* ====== configuration START ====== */
 
@@ -70,6 +70,10 @@ contract PresalerVoting {
         rawVotes[msg.sender] = msg.value;
     }
 
+    /// @notice start voting at `startBlockNr` for `durationHrs`.
+    /// Restricted for owner only.
+    /// @param startBlockNr block number to start voting; starts immediatly if less than current block number.
+    /// @param durationHrs voting duration (from now!); at least 1 hour.
     function startVoting(uint startBlockNr, uint durationHrs) onlyOwner {
         VOTING_START_BLOCKNR = max(block.number, startBlockNr);
         VOTING_END_TIME = now + max(durationHrs,1) * 1 hours;
@@ -77,6 +81,8 @@ contract PresalerVoting {
 
     function setOwner(address newOwner) onlyOwner {owner = newOwner;}
 
+    /// @notice returns current voting result for given address in percent.
+    /// @param voter balance holder address.
     function votedPerCent(address voter) constant external returns (uint) {
         var rawVote = rawVotes[voter];
         if (rawVote<=MAX_AMOUNT_EQU_0_PERCENT) return 0;
@@ -84,8 +90,10 @@ contract PresalerVoting {
         else return rawVote * 100 / 1 ether;
     }
 
-    function votingEndsInHours() constant returns (uint endsInHrs) {
-        return VOTING_END_TIME==0 ? 0 : (VOTING_END_TIME - now) / 1 hours;
+    /// @notice return voting remaining time (hours, minutes).
+    function votingEndsInHHMM() constant returns (uint16, uint16) {
+        var tsec = VOTING_END_TIME - now;
+        return VOTING_END_TIME==0 ? (0,0) : (uint16(tsec / 1 hours), uint16(tsec % 1 hours / 1 minutes));
     }
 
     function currentState() internal constant returns (State) {
@@ -98,6 +106,7 @@ contract PresalerVoting {
         }
     }
 
+    /// @notice returns current state of the voting.
     function state() public constant returns(string) {
         return stateNames[uint(currentState())];
     }
