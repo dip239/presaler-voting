@@ -35,7 +35,7 @@ interface TokenStorage {
 
 contract PresalerVoting {
 
-    string public constant VERSION = "0.0.4";
+    string public constant VERSION = "0.0.5";
 
     /* ====== configuration START ====== */
 
@@ -86,8 +86,8 @@ contract PresalerVoting {
     /// @param voter balance holder address.
     function votedPerCent(address voter) constant external returns (uint) {
         var rawVote = rawVotes[voter];
-        if (rawVote<=MAX_AMOUNT_EQU_0_PERCENT) return 0;
-        else if (rawVote>=MIN_AMOUNT_EQU_100_PERCENT) return 100;
+        if (rawVote < MAX_AMOUNT_EQU_0_PERCENT) return 0;
+        else if (rawVote >= MIN_AMOUNT_EQU_100_PERCENT) return 100;
         else return rawVote * 100 / 1 ether;
     }
 
