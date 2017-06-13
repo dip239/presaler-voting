@@ -93,7 +93,7 @@ contract PresalerVoting {
         stakeWaived_Eth     += uint16((bonus - bonusVoted) / 1 ether);
         stakeConfirmed_Eth  += uint16(bonusVoted / 1 ether);
 
-        stakeRemainingToVote_Eth = uint16((TOTAL_BONUS_SUPPLY_ETH - stakeConfirmed_Eth)/1 ether);
+        stakeRemainingToVote_Eth = uint16(TOTAL_BONUS_SUPPLY_ETH - bonus / 1 ether);
 
     }
 
