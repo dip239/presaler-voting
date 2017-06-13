@@ -59,10 +59,10 @@ contract PresalerVoting {
 
     address public owner;
     address[] public voters;
-    uint public stakeVoted_Eth;
-    uint public stakeRemainingToVote_Eth;
-    uint public stakeWaived_Eth;
-    uint public stakeConfirmed_Eth;
+    uint16 public stakeVoted_Eth;
+    uint16 public stakeRemainingToVote_Eth;
+    uint16 public stakeWaived_Eth;
+    uint16 public stakeConfirmed_Eth;
 
     //constructors
     function PresalerVoting () {
@@ -79,21 +79,21 @@ contract PresalerVoting {
         if (msg.value > 1 ether || !msg.sender.send(msg.value)) throw;
         if (rawVotes[msg.sender] == 0) {
             voters.push(msg.sender);
-            stakeVoted_Eth += bonus;
+            stakeVoted_Eth += uint16(bonus / 1 ether);
         } else {
             //clear statistik related to old voting state for this sender
             bonusVoted           = votedPerCent(msg.sender) * bonus / 100;
-            stakeWaived_Eth     -= (bonus - bonusVoted) / 1 ether;
-            stakeConfirmed_Eth  -= bonusVoted / 1 ether;
+            stakeWaived_Eth     -= uint16((bonus - bonusVoted) / 1 ether);
+            stakeConfirmed_Eth  -= uint16(bonusVoted / 1 ether);
         }
         //special treatment for 0-ether payment
         rawVotes[msg.sender] = msg.value > 0 ? msg.value : 1 wei;
 
         bonusVoted           = votedPerCent(msg.sender) * bonus / 100;
-        stakeWaived_Eth     += (bonus - bonusVoted) / 1 ether;
-        stakeConfirmed_Eth  += bonusVoted / 1 ether;
+        stakeWaived_Eth     += uint16((bonus - bonusVoted) / 1 ether);
+        stakeConfirmed_Eth  += uint16(bonusVoted / 1 ether);
 
-        stakeRemainingToVote_Eth -= TOTAL_BONUS_SUPPLY_ETH - stakeConfirmed_Eth;
+        stakeRemainingToVote_Eth -= uint16(TOTAL_BONUS_SUPPLY_ETH - stakeConfirmed_Eth);
 
     }
 
