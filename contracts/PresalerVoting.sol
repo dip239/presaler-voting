@@ -29,13 +29,13 @@ pragma solidity ^0.4.11;
 /// @notice report bugs to: bugs@ethernian.com
 /// @title Presaler Voting Contract
 
-interface TokenStorage {
+contract TokenStorage {
     function balances(address account) public returns(uint balance);
 }
 
 contract PresalerVoting {
 
-    string public constant VERSION = "0.0.5";
+    string public constant VERSION = "0.0.6";
 
     /* ====== configuration START ====== */
 
@@ -53,8 +53,16 @@ contract PresalerVoting {
 
     uint private constant MAX_AMOUNT_EQU_0_PERCENT   = 10 finney;
     uint private constant MIN_AMOUNT_EQU_100_PERCENT = 1 ether ;
+    uint public constant TOTAL_BONUS_SUPPLY_ETH = 12000;
+
+
 
     address public owner;
+    address[] public voters;
+    uint public stakeVoted_Eth;
+    uint public stakeRemainingToVote_Eth;
+    uint public stakeWaived_Eth;
+    uint public stakeConfirmed_Eth;
 
     //constructors
     function PresalerVoting () {
@@ -63,13 +71,33 @@ contract PresalerVoting {
 
     //accept (and send back) voting payments here
     function ()
-    onlyPresaler
     onlyState(State.VOTING_RUNNING)
     payable {
+        uint bonusVoted;
+        uint bonus = PRESALE_CONTRACT.balances(msg.sender);
+        assert (bonus > 0); // only presaler allowed in.
         if (msg.value > 1 ether || !msg.sender.send(msg.value)) throw;
-        //special treatment for 0-ether payments
+        if (rawVotes[msg.sender] == 0) {
+            voters.push(msg.sender);
+            stakeVoted_Eth += bonus;
+        } else {
+            //clear statistik related to old voting state for this sender
+            bonusVoted           = votedPerCent(msg.sender) * bonus / 100;
+            stakeWaived_Eth     -= (bonus - bonusVoted) / 1 ether;
+            stakeConfirmed_Eth  -= bonusVoted / 1 ether;
+        }
+        //special treatment for 0-ether payment
         rawVotes[msg.sender] = msg.value > 0 ? msg.value : 1 wei;
+
+        bonusVoted           = votedPerCent(msg.sender) * bonus / 100;
+        stakeWaived_Eth     += (bonus - bonusVoted) / 1 ether;
+        stakeConfirmed_Eth  += bonusVoted / 1 ether;
+
+        stakeRemainingToVote_Eth -= TOTAL_BONUS_SUPPLY_ETH - stakeConfirmed_Eth;
+
     }
+
+    function votersLen() external returns (uint) { return voters.length; }
 
     /// @notice start voting at `startBlockNr` for `durationHrs`.
     /// Restricted for owner only.
@@ -80,11 +108,11 @@ contract PresalerVoting {
         VOTING_END_TIME = now + max(durationHrs,1) * 1 hours;
     }
 
-    function setOwner(address newOwner) onlyOwner {owner = newOwner;}
+    function setOwner(address newOwner) onlyOwner { owner = newOwner; }
 
     /// @notice returns current voting result for given address in percent.
     /// @param voter balance holder address.
-    function votedPerCent(address voter) constant external returns (uint) {
+    function votedPerCent(address voter) constant public returns (uint) {
         var rawVote = rawVotes[voter];
         if (rawVote < MAX_AMOUNT_EQU_0_PERCENT) return 0;
         else if (rawVote >= MIN_AMOUNT_EQU_100_PERCENT) return 100;
@@ -113,11 +141,6 @@ contract PresalerVoting {
     }
 
     function max(uint a, uint b) internal constant returns (uint maxValue) { return a>b ? a : b; }
-
-    modifier onlyPresaler() {
-        if (PRESALE_CONTRACT.balances(msg.sender) == 0) throw;
-        _;
-    }
 
     modifier onlyState(State state) {
         if (currentState()!=state) throw;
