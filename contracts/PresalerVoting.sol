@@ -35,7 +35,7 @@ contract TokenStorage {
 
 contract PresalerVoting {
 
-    string public constant VERSION = "0.0.8";
+    string public constant VERSION = "0.0.9";
 
     /* ====== configuration START ====== */
 
@@ -103,7 +103,9 @@ contract PresalerVoting {
     /// Restricted for owner only.
     /// @param startBlockNr block number to start voting; starts immediatly if less than current block number.
     /// @param durationHrs voting duration (from now!); at least 1 hour.
-    function startVoting(uint startBlockNr, uint durationHrs) onlyOwner {
+    function startVoting(uint startBlockNr, uint durationHrs)
+    onlyOwner
+    onlyState(State.BEFORE_START) {
         VOTING_START_BLOCKNR = max(block.number, startBlockNr);
         VOTING_END_TIME = now + max(durationHrs,1) * 1 hours;
     }
